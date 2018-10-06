@@ -12,10 +12,10 @@ import scala.concurrent.ExecutionContext
 import scala.io.StdIn
 
 object App extends App {
-  implicit val system = ActorSystem()
+  implicit val system       = ActorSystem()
   implicit val materializer = ActorMaterializer()
   // needed for the future flatMap/onComplete in the end
-  implicit val executionContext = system.dispatcher
+  implicit val executionContext: ExecutionContext = system.dispatcher
 
   val dependencies = new ConcreteDependencies
 
@@ -31,7 +31,7 @@ object App extends App {
 }
 
 class ConcreteDependencies(implicit ec: ExecutionContext) {
-  val db: PostgresProfile.backend.Database = Database.forConfig("db")
+  val db             = Database.forConfig("db")
   val exampleService = new ExampleService(db)
-  val exampleRoutes = new ExampleRoutes(exampleService)
+  val exampleRoutes  = new ExampleRoutes(exampleService)
 }

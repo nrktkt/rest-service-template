@@ -14,21 +14,23 @@ import scala.concurrent.ExecutionContext
 class ExampleRoutes(val exampleService: ExampleService)(implicit ec: ExecutionContext) {
 
   val routes =
-    pathPrefix("examples") {
-      pathEnd {
-        post {
-          entity(as[CreateExampleRequest]) { createExampleRequest =>
+    // format: off
+    pathPrefix("examples") (
+      pathEnd (
+        post (
+          entity(as[CreateExampleRequest]) ( createExampleRequest =>
             complete(exampleService.createExample(createExampleRequest.toExample).map(ExampleResponse.fromExample))
-          }
-        }
-      } ~
-      path(IntNumber) { id =>
-        get {
+          )
+        )
+      ) ~
+      path(IntNumber) ( id =>
+        get (
           onSuccess(exampleService.retrieveExample(id)) {
             case Some(example) => complete(ExampleResponse.fromExample(example))
-            case None => complete(StatusCodes.NotFound)
+            case None          => complete(StatusCodes.NotFound)
           }
-        }
-      }
-    }
+        )
+      )
+    )
+    // format: on
 }
