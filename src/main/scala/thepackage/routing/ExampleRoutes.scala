@@ -1,8 +1,10 @@
 package thepackage.routing
 
-import akka.http.scaladsl.marshalling.EmptyValue
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.marshalling.ToResponseMarshaller
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import play.api.libs.json.JsError
+import thepackage.directives.EntityDirectives._
 import thepackage.payloads.requests.CreateExampleRequest
 import thepackage.payloads.requests.CreateExampleRequest.format
 import thepackage.payloads.responses.ExampleResponse
@@ -13,12 +15,14 @@ import scala.concurrent.ExecutionContext
 
 class ExampleRoutes(val exampleService: ExampleService)(implicit ec: ExecutionContext) {
 
+  implicit val jsErrorTRM: ToResponseMarshaller[JsError] = ???
+
   val routes =
     // format: off
     pathPrefix("examples") (
       pathEnd (
         post (
-          entity(as[CreateExampleRequest]) ( createExampleRequest =>
+          safeEntity(as[Either[JsError, CreateExampleRequest]]) apply ( createExampleRequest =>
             complete(exampleService.createExample(createExampleRequest.toExample).map(ExampleResponse.fromExample))
           )
         )

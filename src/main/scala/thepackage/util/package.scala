@@ -21,12 +21,20 @@ package object util {
   implicit def writesEntityMarshaller[A](implicit writes: Writes[A]): ToEntityMarshaller[A] =
     jsonMarshaller.compose[A](writes.writes)
 
-  implicit def readsUnmarshaller[A](implicit reads: Reads[A]) =
-    Unmarshaller[JsValue, A](_ =>
-      js =>
+  implicit def readsEitherUnmarshaller[A](implicit reads: Reads[A]): Unmarshaller[JsValue, Either[JsError, A]] =
+    Unmarshaller[JsValue, Either[JsError, A]](_ => js =>
+      Future.successful(
         reads.reads(js) match {
-          case JsSuccess(value, _) => Future.successful(value)
-          case error: JsError      => Future.failed(JsResult.Exception(error))
+          case JsSuccess(value, _) => Right(value)
+          case error: JsError      => Left(error)
+        }
+      )
+    )
+
+  implicit def readsUnmarshaller[A](implicit reads: Reads[A]): Unmarshaller[JsValue, A] =
+    readsEitherUnmarshaller(reads).flatMap(_ => _ => {
+        case Right(r)    => Future.successful(r)
+        case Left(error) => Future.failed(JsResult.Exception(error))
     })
 
   implicit def readsEntityUnmarshaller[A](implicit unm: Unmarshaller[JsValue, A]): FromEntityUnmarshaller[A] =
