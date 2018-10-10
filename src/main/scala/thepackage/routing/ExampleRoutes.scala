@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext
 class ExampleRoutes(val exampleService: ExampleService)(implicit ec: ExecutionContext) {
 
   val routes =
-    // format: off
+    // format: OFF
     pathPrefix("examples") (
       pathEnd (
         post (
@@ -32,5 +32,5 @@ class ExampleRoutes(val exampleService: ExampleService)(implicit ec: ExecutionCo
         )
       )
     )
-    // format: on
+  // format: ON
 }
