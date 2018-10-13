@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Directives._
 import cats.implicits._
 import play.api.libs.json.Json
 import thepackage.directives.AuthzDirectives
-import thepackage.payloads.requests.CreateUserRequest
+import thepackage.payloads.requests.{CreateUserRequest, UpdateUserPasswordRequest}
 import thepackage.payloads.responses.{SuccessfulAuthorizationResponse, UserResponse}
 import thepackage.services.{AuthorizationService, UserService}
 import thepackage.util._
@@ -30,16 +30,29 @@ class UserRoutes(userService: UserService, authorizationService: AuthorizationSe
               userService
                 .createUser(request).et
                 .map(Created -> UserResponse.fromUser(_))
-                .value
             ))
         )
       ) ~
-      path("me") (
-        requireUserAuthz (authContext =>
-          complete(
-            userService
-              .retrieveUser(authContext.userId)
-              .map(maybeUser => UserResponse.fromUser(maybeUser.get))
+      requireUserAuthz ( authContext =>
+        pathPrefix("me") (
+          pathEnd (
+            get (
+              complete(
+                userService
+                  .retrieveUser(authContext.userId)
+                  .map(maybeUser => UserResponse.fromUser(maybeUser.get))
+              )
+            )
+          ) ~
+          path("password") (
+            put (
+              entity(as[UpdateUserPasswordRequest]) ( request =>
+                complete(
+                  userService.updateUserPassword(authContext.userId, request.password)
+                    .map(_ => NoContent)
+                )
+              )
+            )
           )
         )
       )

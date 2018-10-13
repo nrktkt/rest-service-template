@@ -34,6 +34,9 @@ package object util {
   implicit def requestToEntUnm[A](implicit unm: FromEntityUnmarshaller[A]): FromRequestUnmarshaller[A] =
     Unmarshaller.strict[HttpRequest, HttpEntity](_.entity).andThen(unm)
 
+  implicit def eitherTMarshaller[F[_], A, B, T](implicit marshaller: Marshaller[F[Either[A, B]], T]): Marshaller[EitherT[F, A, B], T] =
+    marshaller.compose[EitherT[F, A, B]](_.value)
+
   // todo implement exception handler for json parsing failure
   implicit val jsonUnmarshaller: FromEntityUnmarshaller[JsValue] =
     PredefinedFromEntityUnmarshallers.byteArrayUnmarshaller

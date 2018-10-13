@@ -23,6 +23,7 @@ trait UserService {
   def createUser(request: CreateUserRequest): Future[Either[UserCreationError, User]]
   def retrieveUser(id: UUID): Future[Option[User]]
   def retrieveUserByCredentials(email: String, password: String): Future[Option[User]]
+  def updateUserPassword(userId: UUID, newPassword: String): Future[Any]
 }
 
 class DefaultUserService(db: Database, passwordService: PasswordService[String])
@@ -78,4 +79,11 @@ class DefaultUserService(db: Database, passwordService: PasswordService[String])
     ))
       .filter(user => passwordService.verifyPassword(user.password, password.toCharArray))
       .value
+
+  def updateUserPassword(userId: UUID, newPassword: String) = db.run(
+    UserTable
+      .filter(_.id === userId)
+      .map(_.password)
+      .update(passwordService.hashPassword(newPassword.toCharArray))
+  )
 }
