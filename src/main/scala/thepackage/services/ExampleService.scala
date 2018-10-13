@@ -9,7 +9,8 @@ import scala.concurrent.ExecutionContext
 
 class ExampleService(val db: Database)(implicit ec: ExecutionContext) {
 
-  def retrieveExample(id: Int) = db.run(ExampleTable.filter(_.id === id).result.headOption)
+  def retrieveExample(id: Int) =
+    db.run(ExampleTable.filter(_.id === id).result.headOption)
 
   def createExample(example: Example) =
     db.run((ExampleTable returning ExampleTable.map(_.id)) += example)
