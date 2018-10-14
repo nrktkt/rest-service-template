@@ -36,8 +36,9 @@ class DefaultAuthorizationService(db: Database)(config: DefaultAuthorizationServ
     val token = Token(
       Base64.getUrlEncoder.withoutPadding.encodeToString(tokenBytes),
       userId,
-      now.plus(config.tokenExpiration),
-      now
+      authenticatedAt = now,
+      expiresAt       = now.plus(config.tokenExpiration),
+      createdAt       = now
     )
     db.run(TokenTable += token)
       .map(_ => token)

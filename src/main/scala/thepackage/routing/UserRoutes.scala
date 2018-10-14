@@ -1,6 +1,6 @@
 package thepackage.routing
 
-import java.time.Clock
+import java.time.{Clock, Duration}
 
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.{CacheDirectives, `Cache-Control`}
@@ -17,6 +17,7 @@ import akka.http.scaladsl.marshalling.PredefinedToResponseMarshallers._
 import scala.concurrent.ExecutionContext
 
 class UserRoutes(userService: UserService, authorizationService: AuthorizationService, authzDirectives: AuthzDirectives)
+  (recentAuthWindow: Duration)
   (implicit ec: ExecutionContext, clock: Clock) {
   import authzDirectives._
 
@@ -46,10 +47,12 @@ class UserRoutes(userService: UserService, authorizationService: AuthorizationSe
           ) ~
           path("password") (
             put (
-              entity(as[UpdateUserPasswordRequest]) ( request =>
-                complete(
-                  userService.updateUserPassword(authContext.userId, request.password)
-                    .map(_ => NoContent)
+              authorize(authContext.authenticatedAt.plus(recentAuthWindow).isAfter(now)) (
+                entity(as[UpdateUserPasswordRequest]) ( request =>
+                  complete(
+                    userService.updateUserPassword(authContext.userId, request.password)
+                      .map(_ => NoContent)
+                  )
                 )
               )
             )

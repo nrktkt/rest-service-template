@@ -1,7 +1,7 @@
 package thepackage.directives
 
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.server.{Directive, Directive1}
+import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives._
 import thepackage.errors.InvalidAuthorizationError
 import thepackage.models.{AuthzContext, PublicAuthzContext, UserAuthzContext}
@@ -17,7 +17,7 @@ class DefaultAuthzDirectives(authorizationService: AuthorizationService) extends
   private val contextFromHeader = extractCredentials.flatMap[Tuple1[AuthzContext]] {
     case Some(OAuth2BearerToken(tokenString)) => onSuccess(authorizationService.retrieveValidToken(tokenString))
       .flatMap {
-        case Some(token) => provide(UserAuthzContext(token.userId))
+        case Some(token) => provide(UserAuthzContext(token.userId, token.authenticatedAt))
         case None => complete(InvalidAuthorizationError(
           "invalid_token",
           "The provided token either didn't exist or has expired"

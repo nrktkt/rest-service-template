@@ -50,7 +50,7 @@ class ConcreteDependencies(config: Config)(implicit ec: ExecutionContext, mat: M
   val authzDirectives = new DefaultAuthzDirectives(authorizationService)
 
   val userService = new DefaultUserService(db, passwordService)
-  val userRoutes = new UserRoutes(userService, authorizationService, authzDirectives)
+  val userRoutes = new UserRoutes(userService, authorizationService, authzDirectives)((config \ "services" \ "authorization").getDuration("recentAuthWindow"))
 
   val rejectionHandler = RejectionHandler.newBuilder
     .handle { case MalformedRequestContentRejection(_, e: JsonParseException) =>
