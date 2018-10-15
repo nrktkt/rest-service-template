@@ -1,5 +1,7 @@
 import com.typesafe.config.ConfigFactory
 
+import scala.util.{Failure, Success, Try}
+
 name := "akka-http-slick"
 
 version := "0.1"
@@ -32,10 +34,24 @@ enablePlugins(FlywayPlugin)
 
 libraryDependencies += "org.flywaydb" % "flyway-core" % "5.0.7" % Compile
 val resourceDir = new File("src/main/resources")
-val appConf = ConfigFactory.load(ConfigFactory.parseFile(resourceDir / "application.conf"))
-val dbConf = appConf.getConfig("db.properties")
-flywayUrl := dbConf.getString("url")
-flywayUser := dbConf.getString("user")
-flywayPassword := dbConf.getString("password")
-flywayLocations += "db/migration"
+Try {
+  val dbConf = ConfigFactory
+    .load(ConfigFactory.parseFile(resourceDir / "db.conf"))
+    .getConfig("db.properties")
+  
+  (
+    dbConf.getString("url"),
+    dbConf.getString("user"),
+    dbConf.getString("password")
+  )
+} match {
+  case Success((url, user, password)) =>
+    flywayLocations += "db/migration"
+    flywayUrl := url
+    flywayUser := user
+    flywayPassword := password
+  case Failure(e) =>
+    println(s"Failed to load flyway configuration: ${e.getMessage}") // todo warn level in logger
+    flywayLocations += "db/migration"
+}
 //endregion
