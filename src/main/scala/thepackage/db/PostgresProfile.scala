@@ -18,7 +18,8 @@ trait PostgresProfile extends ExPostgresProfile with PgArraySupport with PgDate2
 
   object PostgresAPI extends API with ArrayImplicits with DateTimeImplicits with JsonImplicits {
 
-    implicit val strListTypeMapper = new SimpleArrayJdbcType[String]("text").to(_.toList)
+    implicit val strListTypeMapper =
+      new SimpleArrayJdbcType[String]("text").to(_.toList)
     implicit val playJsonArrayTypeMapper = new AdvancedArrayJdbcType[JsValue](
       pgjson,
       (s) => utils.SimpleArrayUtils.fromString[JsValue](Json.parse)(s).orNull,
